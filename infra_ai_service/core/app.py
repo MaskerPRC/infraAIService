@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.responses import UJSONResponse
 
+from infra_ai_service.api.router import api_router
 from infra_ai_service.sdk.pgvector import setup_model_and_pool
 
 
