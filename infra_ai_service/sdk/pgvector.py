@@ -22,7 +22,14 @@ async def setup_model_and_pool():
         f"host={settings.DB_HOST} "
         f"port={settings.DB_PORT}"
     )
-    pool = AsyncConnectionPool(conn_str, open=True)
+    pool = AsyncConnectionPool(
+        conn_str,
+        min_size=4,
+        max_size=10,
+        open=True,
+        max_idle=30 * 60.0,  # 允许空闲时间为30分钟
+        reconnect_timeout=5 * 60.0,  # 5分钟后重试连接
+    )
 
     # 设置数据库
     await setup_database(pool)
