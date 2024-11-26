@@ -27,6 +27,6 @@ def get_app() -> FastAPI:
 
     @app.on_event("startup")
     async def startup_event():
-        setup_model_and_pool()
+        await setup_model_and_pool()
 
     return app

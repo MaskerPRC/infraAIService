@@ -12,7 +12,6 @@ def main() -> None:
         port=settings.PORT,
         reload=settings.RELOAD,
         factory=True,
-        log_level="info",
     )
 
 

@@ -60,11 +60,9 @@ def _get_func_with_name(name: str):
     return process_func.get(name, None)
 
 
-def extract_xml_features(feature_xml_path: str):
+def extract_xml_features(content: str):
     try:
-        metadata = ET.parse(
-            feature_xml_path, parser=ET.XMLParser(encoding='utf-8')
-        ).getroot()
+        metadata = ET.fromstring(content)
         res = {}
         count = 1
         for package in metadata:
@@ -81,6 +79,7 @@ def extract_xml_features(feature_xml_path: str):
                     tag_func(res[count], info)
 
             count += 1
+
         return res
     except Exception as e:
         raise Exception(f'process xml error: {e}')

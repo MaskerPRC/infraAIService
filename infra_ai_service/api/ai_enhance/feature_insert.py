@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-import re
+
 from fastapi import APIRouter, Body
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -14,17 +14,20 @@ from infra_ai_service.service.extract_spec import (
     extract_dsc_features,
     check_xml_info,
 )
-
+import re
+import logging
 import infra_ai_service.service.extract_spec as es
 
 router = APIRouter()
+
+logger = logging.getLogger(__name__)
 
 
 class FeatureInsertRequest(BaseModel):
     src_rpm_url: str = ""
     src_deb_url: str = ""
     os_version: str
-    package_name: str = ""
+    package_name: str = ''
 
 
 class FeatureInsertXml(BaseModel):
@@ -105,11 +108,14 @@ async def feature_insert(request: FeatureInsertRequest = Body(...)):
 
         resp_data = {
             "status": "success",
-            "insert_content": f"{ordered_feature}",
+            "insert_content": f"{ordered_feature}"
         }
         return JSONResponse(content=resp_data)
     except Exception as e:
-        resp_data = {"status": "error", "message": str(e)}
+        resp_data = {
+            "status": "error",
+            "message": str(e)
+        }
         return JSONResponse(content=resp_data)
 
 
@@ -119,10 +125,8 @@ def config_xml(request: FeatureInsertXml = Body(...)):
         if not request.force_refresh and es.XML_INFO is not None:
             latest_version = es.XML_INFO.get("os_version", None)
             if latest_version == request.os_version:
-                raise Exception(
-                    f"already config os_version[{latest_version}],"
-                    "need to config with 'force_refresh'=True"
-                )
+                raise Exception(f"already config os_version[{latest_version}],"
+                                "need to config with 'force_refresh'=True")
 
         es.XML_INFO = check_xml_info(request.xml_url, request.os_version)
         resp_data = {
@@ -130,5 +134,8 @@ def config_xml(request: FeatureInsertXml = Body(...)):
         }
         return JSONResponse(content=resp_data)
     except Exception as e:
-        resp_data = {"status": "error", "message": str(e)}
+        resp_data = {
+            "status": "error",
+            "message": str(e)
+        }
         return JSONResponse(content=resp_data)

@@ -4,6 +4,8 @@ import json
 import re
 from copy import deepcopy
 
+from openai import OpenAI
+
 from infra_ai_service.config.config import settings
 from infra_ai_service.service.spec_repair.utils import (
     gen_func_description,
@@ -13,7 +15,6 @@ from infra_ai_service.service.spec_repair.utils import (
     repair_spec_pro,
     save_log,
 )
-from infra_ai_service.sdk import ai_proxy
 
 SYSTEM_PROMPT = (
     "你是一位经验丰富RPM软件包构建人员，"
@@ -76,6 +77,9 @@ spec脚本：
 
 class SpecBot:
     def __init__(self):
+        api_key = settings.OPENAI_API_KEY
+        base_url = settings.OPENAI_BASE_URL
+        self.client = OpenAI(api_key=api_key, base_url=base_url)
         self.model = settings.SPECBOT_AI_MODEL
 
     def repair(self, spec_lines: list, log_lines: list):
@@ -102,11 +106,11 @@ class SpecBot:
 
         is_repaired = False
         try:
-            response = ai_proxy.chat(
-                self.model,
-                messages,
-                tools,
-                {
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=messages,
+                tools=tools,
+                tool_choice={
                     "type": "function",
                     "function": {"name": "repair_spec"},
                 },
@@ -135,7 +139,6 @@ class SpecBot:
 
         repaired_spec_str = "".join(repaired_spec_lines)
         return suggestion, is_repaired, repaired_spec_str, log_content
-        pass
 
     def repair_pro(self, spec_lines, log_lines, doc_content=None):
         """
@@ -160,17 +163,19 @@ class SpecBot:
         is_repaired = False
         try:
             messages = self._prepare_messages_pro_1(spec, log, doc_content)
-            response = ai_proxy.chat(settings.REPAIR_PRO_AI_MODEL, messages)
+            response = self.client.chat.completions.create(
+                model=settings.REPAIR_PRO_AI_MODEL, messages=messages
+            )
             suggestion = response.choices[0].message.content
 
             messages = self._prepare_messages_pro_2(
                 spec, suggestion, doc_content
             )
-            response = ai_proxy.chat(
-                self.model,
-                messages,
-                tools,
-                {
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=messages,
+                tools=tools,
+                tool_choice={
                     "type": "function",
                     "function": {"name": "repair_spec_pro"},
                 },
